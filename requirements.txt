@@ -1,0 +1,12 @@
+Flask==3.0.3
+python-dotenv==1.0.1
+pymongo==4.7.2
+google-auth==2.29.0
+google-auth-oauthlib==1.2.0
+google-auth-httplib2==0.2.0
+google-api-python-client==2.129.0
+requests==2.32.2
+cryptography==42.0.7
+nltk==3.10.0
+dateparser==1.4.1
+

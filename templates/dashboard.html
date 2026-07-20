@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MailSort - Dashboard</title>
+    <!-- Google Fonts Inter & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js CDN for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-icon">
+                    <i data-lucide="mail"></i>
+                </div>
+                <span class="logo-text">MailSort AI</span>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <a href="#overview" class="menu-item active" data-tab="overview">
+                    <i data-lucide="layout-dashboard"></i> Dashboard
+                </a>
+                <a href="#inbox" class="menu-item" data-tab="inbox">
+                    <i data-lucide="inbox"></i> Inbox
+                </a>
+                <a href="#categories" class="menu-item" data-tab="categories">
+                    <i data-lucide="tag"></i> Categories
+                </a>
+                <a href="#analytics" class="menu-item" data-tab="analytics">
+                    <i data-lucide="bar-chart-3"></i> Analytics
+                </a>
+                <a href="#settings" class="menu-item" data-tab="settings">
+                    <i data-lucide="settings"></i> Settings
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <a href="/auth/logout" class="menu-item logout">
+                    <i data-lucide="log-out"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Navbar -->
+            <header class="topbar">
+                <div class="topbar-search">
+                    <i data-lucide="search" class="search-icon"></i>
+                    <input type="text" id="searchInput" placeholder="Search sender, subject, body...">
+                </div>
+                
+                <div class="topbar-actions">
+                    <button class="btn btn-primary" id="btnSync">
+                        <i data-lucide="refresh-cw" id="syncIcon"></i>
+                        <span>Sync Inbox</span>
+                    </button>
+                    
+                    <div class="user-profile" id="userProfile">
+                        <img src="" alt="Avatar" id="userAvatar" class="user-avatar">
+                        <span id="userName" class="user-name">Loading...</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content Panels -->
+            <div class="content-container">
+                
+                <!-- 1. OVERVIEW / DASHBOARD TAB -->
+                <section id="tab-overview" class="tab-panel active">
+                    <h1 class="panel-title">Overview</h1>
+                    
+                    <!-- Overview Metrics Grid -->
+                    <div class="metrics-grid">
+                        <div class="metric-card hover-lift" data-filter-priority="all">
+                            <div class="metric-header">
+                                <span class="metric-title">Total Inbox</span>
+                                <div class="metric-icon bg-indigo"><i data-lucide="mail"></i></div>
+                            </div>
+                            <div class="metric-value" id="metric-total">-</div>
+                        </div>
+                        <div class="metric-card hover-lift border-urgent" data-filter-priority="Urgent">
+                            <div class="metric-header">
+                                <span class="metric-title">Urgent</span>
+                                <div class="metric-icon bg-red"><i data-lucide="alert-triangle"></i></div>
+                            </div>
+                            <div class="metric-value text-red" id="metric-urgent">-</div>
+                        </div>
+                        <div class="metric-card hover-lift border-reply" data-filter-priority="Reply Now">
+                            <div class="metric-header">
+                                <span class="metric-title">Reply Now</span>
+                                <div class="metric-icon bg-blue"><i data-lucide="message-square-reply"></i></div>
+                            </div>
+                            <div class="metric-value text-blue" id="metric-reply">-</div>
+                        </div>
+                        <div class="metric-card hover-lift border-read-later" data-filter-priority="Read Later">
+                            <div class="metric-header">
+                                <span class="metric-title">Read Later</span>
+                                <div class="metric-icon bg-yellow"><i data-lucide="book-open"></i></div>
+                            </div>
+                            <div class="metric-value text-yellow" id="metric-read-later">-</div>
+                        </div>
+                        <div class="metric-card hover-lift border-pending" data-filter-followup="true">
+                            <div class="metric-header">
+                                <span class="metric-title">Pending Follow-ups</span>
+                                <div class="metric-icon bg-purple"><i data-lucide="clock"></i></div>
+                            </div>
+                            <div class="metric-value text-purple" id="metric-pending">-</div>
+                        </div>
+                    </div>
+
+                    <!-- Recent / Urgent Email Highlights -->
+                    <div class="dashboard-highlights">
+                        <div class="highlights-card">
+                            <div class="highlights-header">
+                                <h3>High Priority Items</h3>
+                                <button class="btn btn-text" onclick="switchTab('inbox')">View All Inbox</button>
+                            </div>
+                            <div class="email-list-simple" id="urgent-emails-list">
+                                <!-- Skeleton loaders or simple list item rows will go here -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. INBOX TAB -->
+                <section id="tab-inbox" class="tab-panel">
+                    <div class="panel-header-inline">
+                        <h1 class="panel-title">Inbox Feed</h1>
+                        <div class="filter-controls">
+                            <select id="priorityFilter">
+                                <option value="all">All Priorities</option>
+                                <option value="Urgent">Urgent</option>
+                                <option value="Reply Now">Reply Now</option>
+                                <option value="Read Later">Read Later</option>
+                                <option value="Ignore">Ignore</option>
+                            </select>
+                            <select id="sortFilter">
+                                <option value="newest">Newest First</option>
+                                <option value="score">Priority Score</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="email-grid-container" id="inbox-emails-list">
+                        <!-- Card list loaded dynamically -->
+                    </div>
+                </section>
+
+                <!-- 3. CATEGORIES TAB -->
+                <section id="tab-categories" class="tab-panel">
+                    <h1 class="panel-title">Browse by Categories</h1>
+                    
+                    <!-- Categories selector bar -->
+                    <div class="categories-filter-bar" id="categoryTabs">
+                        <button class="cat-pill active" data-category="all">All Categories</button>
+                        <button class="cat-pill" data-category="Client"><i data-lucide="briefcase"></i> Client</button>
+                        <button class="cat-pill" data-category="Manager"><i data-lucide="crown"></i> Manager</button>
+                        <button class="cat-pill" data-category="HR"><i data-lucide="users"></i> HR</button>
+                        <button class="cat-pill" data-category="Finance"><i data-lucide="credit-card"></i> Finance</button>
+                        <button class="cat-pill" data-category="Meeting"><i data-lucide="calendar"></i> Meeting</button>
+                        <button class="cat-pill" data-category="Personal"><i data-lucide="user"></i> Personal</button>
+                        <button class="cat-pill" data-category="Promotion"><i data-lucide="ticket"></i> Promotion</button>
+                        <button class="cat-pill" data-category="Newsletter"><i data-lucide="newspaper"></i> Newsletter</button>
+                        <button class="cat-pill" data-category="Security"><i data-lucide="shield"></i> Security</button>
+                        <button class="cat-pill" data-category="System Notification"><i data-lucide="terminal"></i> System</button>
+                    </div>
+                    
+                    <div class="email-grid-container" id="category-emails-list" style="margin-top: 2rem;">
+                        <!-- Category emails load here -->
+                    </div>
+                </section>
+
+                <!-- 4. ANALYTICS TAB -->
+                <section id="tab-analytics" class="tab-panel">
+                    <h1 class="panel-title">Analytics & Insights</h1>
+                    
+                    <div class="analytics-charts-grid">
+                        <div class="chart-card">
+                            <h3>Priority Distribution</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="priorityChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-card">
+                            <h3>Category Distribution</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="categoryChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card chart-full">
+                            <h3>Daily Incoming Volume (Past 7 Days)</h3>
+                            <div class="chart-wrapper trends-wrapper">
+                                <canvas id="trendsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 5. SETTINGS TAB -->
+                <section id="tab-settings" class="tab-panel">
+                    <h1 class="panel-title">Settings</h1>
+                    
+                    <div class="settings-grid">
+                        <div class="settings-card">
+                            <h3>Integration Status</h3>
+                            <div class="setting-row">
+                                <span>Gmail API Sync</span>
+                                <span class="badge badge-success">Connected</span>
+                            </div>
+                            <div class="setting-row">
+                                <span>NLP Analysis Engine</span>
+                                <span class="badge badge-success" id="groqStatus">Active</span>
+                            </div>
+                            <div class="setting-row">
+                                <span>Database Engine</span>
+                                <span class="badge badge-success" id="dbStatus">MongoDB Connected</span>
+                            </div>
+                            <div class="setting-row">
+                                <span>Demo Mode (Mocking)</span>
+                                <span class="badge" id="demoStatus">Active</span>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-card">
+                            <h3>User Profile Info</h3>
+                            <div class="profile-settings">
+                                <div class="profile-meta">
+                                    <h4 id="settings-user-name">-</h4>
+                                    <p id="settings-user-email">-</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Sliding Details Drawer (Right Side) -->
+    <div class="drawer-overlay" id="drawerOverlay"></div>
+    <div class="drawer" id="emailDrawer">
+        <div class="drawer-header">
+            <button class="btn-close" id="btnDrawerClose">
+                <i data-lucide="x"></i>
+            </button>
+            <h2 class="drawer-title">Email Intelligence Analysis</h2>
+        </div>
+        
+        <div class="drawer-body" id="drawerBody">
+            <!-- Dynamically populated detail information -->
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- JavaScript scripts -->
+    <script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
