@@ -1,6 +1,4 @@
 """
-helpers.py
-----------
 Shared utilities for the MailSort application.
 """
 

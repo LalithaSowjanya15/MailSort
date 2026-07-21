@@ -1,6 +1,4 @@
 """
-deadline_detector.py
---------------------
 Detects deadline expressions in email text using regex pattern matching
 combined with dateparser for natural-language date resolution.
 

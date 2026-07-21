@@ -1,4 +1,4 @@
-// MailSort — State Management
+// MailSort AI — State Management
 const state = {
     user: null,
     emails: [],
@@ -11,7 +11,7 @@ const state = {
     }
 };
 
-// DOM Elements
+// DOM Elements Reference
 const elements = {
     navLinks: document.querySelectorAll('.sidebar-menu .menu-item'),
     tabPanels: document.querySelectorAll('.tab-panel'),
@@ -23,12 +23,11 @@ const elements = {
     syncIcon: document.getElementById('syncIcon'),
     searchInput: document.getElementById('searchInput'),
     
-    // Overview metrics
+    // Overview KPI Metrics
     metricTotal: document.getElementById('metric-total'),
     metricUrgent: document.getElementById('metric-urgent'),
     metricReply: document.getElementById('metric-reply'),
     metricReadLater: document.getElementById('metric-read-later'),
-    metricPending: document.getElementById('metric-pending'),
     
     // Containers
     urgentEmailsList: document.getElementById('urgent-emails-list'),
@@ -58,10 +57,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function initApp() {
-    // 1. Initialize icons
+    // 1. Initialize Lucide icons
     lucide.createIcons();
     
-    // 2. Register Navigation Panel Switches
+    // 2. Register Sidebar Navigation Links
     elements.navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
@@ -78,25 +77,19 @@ async function initApp() {
     if (elements.btnDrawerClose) elements.btnDrawerClose.addEventListener('click', closeDrawer);
     if (elements.drawerOverlay) elements.drawerOverlay.addEventListener('click', closeDrawer);
     
-    // Metric Card Click Redirection
+    // Metric Card Click Filter Navigation
     document.querySelectorAll('.metric-card').forEach(card => {
         card.addEventListener('click', () => {
             const prio = card.getAttribute('data-filter-priority');
-            const followup = card.getAttribute('data-filter-followup');
-            
             switchTab('inbox');
-            
-            if (prio) {
+            if (prio && elements.priorityFilter) {
                 elements.priorityFilter.value = prio;
-            } else if (followup === 'true') {
-                // If clicked pending followups, we set default sort/filter
-                elements.priorityFilter.value = 'all';
+                handleInboxFilters();
             }
-            handleInboxFilters();
         });
     });
     
-    // Setup Category click listeners
+    // Setup Category Pills Filter Click Handlers
     if (elements.categoryTabs) {
         elements.categoryTabs.querySelectorAll('.cat-pill').forEach(pill => {
             pill.addEventListener('click', () => {
@@ -108,7 +101,7 @@ async function initApp() {
         });
     }
     
-    // Setup Search Debouncer
+    // Setup Search Input Debouncer
     if (elements.searchInput) {
         let debounceTimer;
         elements.searchInput.addEventListener('input', (e) => {
@@ -120,12 +113,12 @@ async function initApp() {
         });
     }
     
-    // 4. Fetch session information and dashboard items
+    // 4. Load Auth Session and Dashboard Initial Data
     await checkAuthStatus();
     await loadDashboardData();
 }
 
-// Check if user session is valid
+// Check Session Authentication Status
 async function checkAuthStatus() {
     try {
         const res = await fetch('/auth/status');
@@ -134,23 +127,23 @@ async function checkAuthStatus() {
         if (data.authenticated) {
             state.user = data.user;
             
-            // Populate profile badge
-            elements.userName.textContent = data.user.name;
-            elements.userAvatar.src = data.user.picture || 'https://lh3.googleusercontent.com/a/default-user=s96-c';
+            // Populate profile bar
+            if (elements.userName) elements.userName.textContent = data.user.name;
+            if (elements.userAvatar) elements.userAvatar.src = data.user.picture || 'https://lh3.googleusercontent.com/a/default-user=s96-c';
             
-            // Populate settings page profile
+            // Populate settings profile info
             if (elements.settingsUserName) elements.settingsUserName.textContent = data.user.name;
             if (elements.settingsUserEmail) elements.settingsUserEmail.textContent = data.user.email;
         } else {
-            // Not authenticated, send back to landing page
+            // Not authenticated, redirect to landing login page
             window.location.href = '/';
         }
     } catch (e) {
-        console.error("Auth validation failed:", e);
+        console.error("Auth validation request error:", e);
     }
 }
 
-// Fetch dashboard KPIs and recent emails
+// Load Dashboard Data & Metrics from API
 async function loadDashboardData() {
     try {
         const res = await fetch('/api/dashboard');
@@ -165,39 +158,38 @@ async function loadDashboardData() {
             renderInboxFeed();
             renderCategoryFeed();
             
-            // Initializing analytics charts if tab active
-            if (state.activeTab === 'analytics') {
+            // Initialize analytics charts if active tab
+            if (state.activeTab === 'analytics' && typeof loadAnalyticsData === 'function') {
                 loadAnalyticsData();
             }
         }
     } catch (e) {
         console.error("Dashboard statistics loading failed:", e);
-        showToast("Failed to load inbox data", "error");
+        showToast("Failed to load inbox metrics", "error");
     }
 }
 
-// Update KPI Metrics Cards
+// Update KPI Metric Cards
 function updateMetricsUI() {
     if (!state.metrics) return;
-    elements.metricTotal.textContent = state.metrics.total;
-    elements.metricUrgent.textContent = state.metrics.urgent;
-    elements.metricReply.textContent = state.metrics.reply_now;
-    elements.metricReadLater.textContent = state.metrics.read_later;
-    elements.metricPending.textContent = state.metrics.pending_followups;
+    if (elements.metricTotal) elements.metricTotal.textContent = state.metrics.total;
+    if (elements.metricUrgent) elements.metricUrgent.textContent = state.metrics.urgent;
+    if (elements.metricReply) elements.metricReply.textContent = state.metrics.reply_now;
+    if (elements.metricReadLater) elements.metricReadLater.textContent = state.metrics.read_later;
 }
 
-// Render Simple list rows inside Overview Highlights
+// Render Simple Email Rows in Overview Highlights Card
 function renderOverviewFeed() {
     if (!elements.urgentEmailsList) return;
     
-    // Sort emails, filter Urgent or Reply Now
+    // Filter Urgent and Reply Now emails
     const priorityItems = state.emails.filter(e => e.priority === 'Urgent' || e.priority === 'Reply Now');
     
     if (priorityItems.length === 0) {
         elements.urgentEmailsList.innerHTML = `
-            <div style="text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.95rem;">
+            <div style="text-align: center; padding: 2.5rem; color: var(--text-muted); font-size: 0.95rem;">
                 <i data-lucide="sparkles" style="width: 24px; height: 24px; color: var(--accent); margin-bottom: 0.5rem; display: block; margin-left: auto; margin-right: auto;"></i>
-                No high priority items pending action. Nice job!
+                No high-priority action items pending. You're all caught up!
             </div>
         `;
         lucide.createIcons();
@@ -207,13 +199,14 @@ function renderOverviewFeed() {
     let html = '';
     priorityItems.slice(0, 5).forEach(em => {
         const dotColor = em.priority === 'Urgent' ? '#EF4444' : '#3B82F6';
+        const senderName = em.sender.split('<')[0].replace(/"/g, '').trim();
         html += `
             <div class="simple-email-row" onclick="openEmailDetails('${em.gmail_id}')">
                 <div class="simple-email-left">
                     <span class="simple-email-dot" style="background-color: ${dotColor}"></span>
                     <div class="simple-email-meta">
                         <span class="simple-email-subject">${escapeHTML(em.subject)}</span>
-                        <span class="simple-email-sender">${escapeHTML(em.sender.split('<')[0])}</span>
+                        <span class="simple-email-sender">${escapeHTML(senderName)}</span>
                     </div>
                 </div>
                 <span class="badge ${em.priority === 'Urgent' ? 'badge-urgent' : 'badge-reply'}">${em.priority}</span>
@@ -224,30 +217,25 @@ function renderOverviewFeed() {
     elements.urgentEmailsList.innerHTML = html;
 }
 
-// Render dynamic elements for the main Inbox feed
+// Render Email Card Feed in Main Inbox Tab
 function renderInboxFeed() {
     if (!elements.inboxEmailsList) return;
     
     let filtered = [...state.emails];
     
     // Apply Priority filter
-    const prio = elements.priorityFilter.value;
+    const prio = elements.priorityFilter ? elements.priorityFilter.value : 'all';
     if (prio !== 'all') {
         filtered = filtered.filter(e => e.priority === prio);
     }
     
     // Apply Sort filter
-    const sortVal = elements.sortFilter.value;
-    if (sortVal === 'score') {
-        filtered.sort((a, b) => b.priority_score - a.priority_score);
-    } else {
-        filtered.sort((a, b) => b.created_at - a.created_at);
-    }
+    filtered.sort((a, b) => b.created_at - a.created_at);
     
     buildEmailsListGrid(filtered, elements.inboxEmailsList);
 }
 
-// Render dynamic elements for the Categories feed
+// Render Email Cards in Categories Tab
 function renderCategoryFeed() {
     if (!elements.categoryEmailsList) return;
     
@@ -261,13 +249,13 @@ function renderCategoryFeed() {
     buildEmailsListGrid(filtered, elements.categoryEmailsList);
 }
 
-// Build standard email card grid representation
+// Helper to Build Dynamic Email Cards Grid
 function buildEmailsListGrid(list, container) {
     if (list.length === 0) {
         container.innerHTML = `
             <div style="text-align: center; padding: 4rem 2rem; color: var(--text-muted); background: white; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-                <i data-lucide="inbox" style="width: 40px; height: 40px; margin-bottom: 1rem; color: var(--text-light);"></i>
-                <p>No emails match the selected filters.</p>
+                <i data-lucide="inbox" style="width: 40px; height: 40px; margin-bottom: 1rem; color: var(--text-light); display: block; margin-left: auto; margin-right: auto;"></i>
+                <p style="font-weight: 500;">No emails match the selected filters.</p>
             </div>
         `;
         lucide.createIcons();
@@ -291,7 +279,7 @@ function buildEmailsListGrid(list, container) {
             : '';
             
         const formattedDate = formatDateString(em.created_at);
-        const unreadIndicator = em.status === 'unread' ? '<span style="color:var(--primary); font-weight:bold; margin-right:4px;">●</span>' : '';
+        const unreadIndicator = em.status === 'unread' ? '<span style="color:var(--primary); font-weight:bold; margin-right:6px;">●</span>' : '';
         
         html += `
             <div class="email-card" onclick="openEmailDetails('${em.gmail_id}')">
@@ -302,9 +290,7 @@ function buildEmailsListGrid(list, container) {
                 <h3 class="email-subject">${escapeHTML(em.subject)}</h3>
                 <div class="email-badges-row">
                     <span class="badge ${badgeClass}">${em.priority}</span>
-                    <span class="badge priority-score-badge">Score: ${em.priority_score}</span>
                     <span class="badge badge-category">${em.category}</span>
-                    <span class="badge" style="background-color:#F1F5F9; color:var(--text-muted); text-transform:capitalize;">${em.sentiment} Sentiment</span>
                 </div>
                 <p class="email-summary">${escapeHTML(em.summary || em.body.substring(0, 150) + '...')}</p>
                 <div class="email-meta-footer">
@@ -319,22 +305,15 @@ function buildEmailsListGrid(list, container) {
     lucide.createIcons();
 }
 
-// Trigger Google Gmail fetch process
+// Trigger Google Gmail Ingestion Sync
 async function syncEmails() {
-    // 1. Enter Loading UI State
     elements.syncIcon.classList.add('animate-spin');
     elements.btnSync.disabled = true;
     elements.btnSync.querySelector('span').textContent = 'Syncing...';
     
-    // Inject skeletons in containers
     const skeletons = Array(3).fill(0).map(() => `
         <div class="skeleton-card">
             <div class="skeleton-shimmer"></div>
-            <div style="padding: 1rem; position: absolute; inset: 0; display:flex; flex-direction:column; gap:0.5rem;">
-                <div class="skeleton-bar short"></div>
-                <div class="skeleton-bar long"></div>
-                <div class="skeleton-bar medium"></div>
-            </div>
         </div>
     `).join('');
     
@@ -346,28 +325,26 @@ async function syncEmails() {
         const data = await res.json();
         
         if (data.success) {
-            showToast("Inbox sync completed successfully", "success");
+            showToast("Inbox synced successfully", "success");
             await loadDashboardData();
         } else {
             showToast("Sync failed: " + (data.details || "API Error"), "error");
         }
     } catch (e) {
-        console.error("Inbox sync request failed:", e);
+        console.error("Inbox sync request error:", e);
         showToast("Server request failed", "error");
     } finally {
-        // 2. Remove Loading state
         elements.syncIcon.classList.remove('animate-spin');
         elements.btnSync.disabled = false;
         elements.btnSync.querySelector('span').textContent = 'Sync Inbox';
         
-        // Re-render
         renderOverviewFeed();
         renderInboxFeed();
         renderCategoryFeed();
     }
 }
 
-// Open sliding details drawer and fetch details
+// Open Sliding Detail Drawer
 async function openEmailDetails(gmailId) {
     elements.drawerOverlay.classList.add('active');
     elements.drawer.classList.add('active');
@@ -385,11 +362,10 @@ async function openEmailDetails(gmailId) {
         if (data.success) {
             const em = data.email;
             
-            // Mark email as read in local memory list to update counts
+            // Mark email read in local memory list
             const memEm = state.emails.find(e => e.gmail_id === gmailId);
             if (memEm) {
                 memEm.status = 'read';
-                // Trigger visual update
                 renderOverviewFeed();
                 renderInboxFeed();
                 renderCategoryFeed();
@@ -400,27 +376,18 @@ async function openEmailDetails(gmailId) {
             else if (em.priority === 'Reply Now') badgeClass = 'badge-reply';
             else if (em.priority === 'Read Later') badgeClass = 'badge-read';
             
-            const actionsListHtml = em.action_items && em.action_items.length > 0
-                ? em.action_items.map(item => `
-                    <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem; font-size:0.925rem;">
-                        <input type="checkbox" style="cursor:pointer;">
-                        <span>${escapeHTML(item)}</span>
-                    </div>
-                  `).join('')
-                : '<p style="color:var(--text-muted); font-size:0.9rem;">No action items detected.</p>';
-                
             const deadlineText = em.deadline 
-                ? `<span class="badge badge-urgent" style="margin-left:0.5rem;">Deadline: ${escapeHTML(em.deadline)}</span>`
+                ? `<span class="badge badge-urgent">Deadline: ${escapeHTML(em.deadline)}</span>`
                 : '';
                 
             const replyBlockHtml = em.suggested_reply
                 ? `
                     <div class="detail-section-card">
-                        <div class="detail-section-title">Suggested Reply Template</div>
+                        <div class="detail-section-title">AI Suggested Reply Template</div>
                         <textarea class="suggested-reply-box" id="replyTextarea">${escapeHTML(em.suggested_reply)}</textarea>
                         <div class="suggested-reply-actions">
                             <button class="btn btn-primary" onclick="copyReplyText()">
-                                <i data-lucide="copy" style="width:14px; height:14px;"></i> Copy Template
+                                <i data-lucide="copy" style="width:14px; height:14px;"></i> Copy Reply Template
                             </button>
                         </div>
                     </div>
@@ -436,38 +403,30 @@ async function openEmailDetails(gmailId) {
                     </div>
                 </div>
                 
-                <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
                     <div class="email-badges-row">
                         <span class="badge ${badgeClass}">${em.priority}</span>
-                        <span class="badge priority-score-badge">Score: ${em.priority_score}/100</span>
                         <span class="badge badge-category">${em.category}</span>
-                        <span class="badge" style="background-color:#F1F5F9; color:var(--text-muted); text-transform:capitalize;">${em.sentiment} Sentiment</span>
                     </div>
                     ${deadlineText}
                 </div>
                 
-                <!-- NLP Classification Reason -->
+                <!-- Classification Reason -->
                 <div class="detail-section-card" style="border-left: 4px solid var(--primary);">
                     <div class="detail-section-title">Classification Reason</div>
-                    <p style="font-size:0.925rem; line-height:1.4; color:var(--text-main);">${escapeHTML(em.reason)}</p>
+                    <p style="font-size:0.925rem; line-height:1.5; color:var(--text-main);">${escapeHTML(em.reason)}</p>
                 </div>
 
-                <!-- NLP Extractive Summary -->
+                <!-- Groq AI Executive Summary -->
                 <div class="detail-section-card">
-                    <div class="detail-section-title">Summary</div>
-                    <p style="font-size:0.925rem; line-height:1.5; color:var(--text-main); font-weight:500;">${escapeHTML(em.summary)}</p>
-                </div>
-
-                <!-- Action Items -->
-                <div class="detail-section-card">
-                    <div class="detail-section-title">Extracted Action Items</div>
-                    ${actionsListHtml}
+                    <div class="detail-section-title">AI Summary</div>
+                    <p style="font-size:0.95rem; line-height:1.55; color:var(--text-main); font-weight:500;">${escapeHTML(em.summary)}</p>
                 </div>
 
                 <!-- Suggested Reply -->
                 ${replyBlockHtml}
 
-                <!-- Original Email text -->
+                <!-- Original Email Text -->
                 <div class="detail-section-card">
                     <div class="detail-section-title">Original Email Body</div>
                     <div class="original-body-text">${escapeHTML(em.body)}</div>
@@ -475,11 +434,11 @@ async function openEmailDetails(gmailId) {
             `;
             lucide.createIcons();
         } else {
-            showToast("Failed to fetch analysis details", "error");
+            showToast("Failed to fetch email details", "error");
             closeDrawer();
         }
     } catch (e) {
-        console.error("Failed to load email analytics details:", e);
+        console.error("Failed to load email details:", e);
         closeDrawer();
     }
 }
@@ -489,7 +448,7 @@ function closeDrawer() {
     elements.drawer.classList.remove('active');
 }
 
-// Utility to copy AI draft template
+// Copy AI Draft Template to Clipboard
 function copyReplyText() {
     const textarea = document.getElementById('replyTextarea');
     if (!textarea) return;
@@ -499,10 +458,9 @@ function copyReplyText() {
     showToast("Suggested reply copied to clipboard", "success");
 }
 
-// Handle global search inputs
+// Search Query Handler
 async function handleSearch(query) {
     if (!query) {
-        // Fallback to complete list feeds
         await loadDashboardData();
         return;
     }
@@ -512,28 +470,24 @@ async function handleSearch(query) {
         const data = await res.json();
         
         if (data.success) {
-            // Force focus navigation panel tab display
             switchTab('inbox');
-            
-            // Build UI listing search matches
             buildEmailsListGrid(data.emails, elements.inboxEmailsList);
-            showToast(`Found ${data.emails.length} matching emails`, "success");
+            showToast(`Found ${data.emails.length} matching email(s)`, "success");
         }
     } catch (e) {
-        console.error("Search query dispatch error:", e);
+        console.error("Search query error:", e);
     }
 }
 
-// Handle local select filter triggers inside Inbox tab
+// Filter Trigger Handler
 function handleInboxFilters() {
     renderInboxFeed();
 }
 
-// Sidebar Tab switching
+// Sidebar Tab Switcher
 function switchTab(tabId) {
     state.activeTab = tabId;
     
-    // Toggle active sidebar link styling
     elements.navLinks.forEach(link => {
         if (link.getAttribute('data-tab') === tabId) {
             link.classList.add('active');
@@ -542,7 +496,6 @@ function switchTab(tabId) {
         }
     });
     
-    // Toggle active panel content
     elements.tabPanels.forEach(panel => {
         if (panel.id === `tab-${tabId}`) {
             panel.classList.add('active');
@@ -551,15 +504,16 @@ function switchTab(tabId) {
         }
     });
     
-    // Trigger analytics loading when rendering chart panel
-    if (tabId === 'analytics') {
+    if (tabId === 'analytics' && typeof loadAnalyticsData === 'function') {
         loadAnalyticsData();
     }
 }
 
-// App toast notification system
+// Toast Notification Handler
 function showToast(message, type = 'success') {
     const container = document.getElementById('toastContainer');
+    if (!container) return;
+    
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
     
@@ -573,31 +527,28 @@ function showToast(message, type = 'success') {
     container.appendChild(toast);
     lucide.createIcons();
     
-    // Force CSS trigger transition
     setTimeout(() => toast.classList.add('show'), 50);
     
-    // Remove after 3.5 seconds
     setTimeout(() => {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 300);
     }, 3500);
 }
 
-// Formatting helpers
+// Date Formatter Helper
 function formatDateString(timestamp) {
     if (!timestamp) return '';
     const date = new Date(timestamp * 1000);
-    
-    const options = { month: 'short', day: 'numeric' };
     const today = new Date();
     
     if (date.toDateString() === today.toDateString()) {
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
     
-    return date.toLocaleDateString([], options);
+    return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
 }
 
+// HTML Escape Helper
 function escapeHTML(str) {
     if (!str) return '';
     return str
@@ -608,6 +559,7 @@ function escapeHTML(str) {
         .replace(/'/g, '&#039;');
 }
 
-// Global window reference declarations
+// Global Window Function Attachments
 window.switchTab = switchTab;
 window.copyReplyText = copyReplyText;
+window.openEmailDetails = openEmailDetails;

@@ -1,8 +1,5 @@
 """
-action_extractor.py
--------------------
-Extracts action items and follow-up indicators from email body text
-using two complementary NLP methods:
+Extracts action items from email body text using two complementary NLP methods:
   1. Pattern matching — regex phrases that signal instructions ("please X", "must X")
   2. Imperative detection — identifies sentences beginning with a known action verb,
      validated against NLTK POS tags to confirm verb form.
@@ -25,32 +22,6 @@ ACTION_VERBS = {
     'verify', 'confirm', 'join', 'attend', 'schedule', 'prepare', 
     'upload', 'download', 'pay', 'respond', 'check', 'resolve', 'fix'
 }
-
-FOLLOW_UP_PHRASES = [
-    r"following up",
-    r"kind reminder",
-    r"gentle reminder",
-    r"waiting for your response",
-    r"waiting for response",
-    r"have you completed",
-    r"pending",
-    r"please respond",
-    r"please reply",
-    r"any updates"
-]
-
-def check_follow_up(text):
-    """
-    Checks if the email body requires follow-up based on standard indicators.
-    Returns: Boolean
-    """
-    if not text:
-        return False
-    text_lower = text.lower()
-    for phrase in FOLLOW_UP_PHRASES:
-        if re.search(phrase, text_lower):
-            return True
-    return False
 
 def extract_action_items(body):
     """

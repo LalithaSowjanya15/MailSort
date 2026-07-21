@@ -1,6 +1,4 @@
 """
-nlp_processor.py
-----------------
 Text preprocessing pipeline for MailSort's NLP rule engine.
 
 Converts raw email text into a cleaned string and a list of

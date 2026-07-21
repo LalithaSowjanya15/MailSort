@@ -1,6 +1,4 @@
 """
-priority_engine.py
-------------------
 Keyword-rule priority scoring and category classification engine.
 
 Scores each email against PRIORITY_KEYWORDS and SPECIAL_WEIGHTS,
@@ -12,7 +10,7 @@ import re
 from services.keyword_engine import PRIORITY_KEYWORDS, SPECIAL_WEIGHTS, CATEGORY_KEYWORDS
 from utils.helpers import logger
 
-def calculate_priority_and_category(cleaned_text, lemmatized_tokens, deadline, has_action_items, has_follow_up):
+def calculate_priority_and_category(cleaned_text, lemmatized_tokens, deadline, has_action_items):
     """
     Evaluates priority score, priority classification, category, and reason.
     
@@ -57,8 +55,6 @@ def calculate_priority_and_category(cleaned_text, lemmatized_tokens, deadline, h
     if deadline:
         score += 25
     if has_action_items:
-        score += 15
-    if has_follow_up:
         score += 15
         
     # Clip score to valid range [0, 100]
@@ -110,8 +106,6 @@ def calculate_priority_and_category(cleaned_text, lemmatized_tokens, deadline, h
         reasons.append(f"urgent keywords ({kw_list_str})")
     if has_action_items:
         reasons.append("immediate action requirement")
-    if has_follow_up:
-        reasons.append("follow-up indicators")
         
     if not reasons:
         if priority == "Ignore":

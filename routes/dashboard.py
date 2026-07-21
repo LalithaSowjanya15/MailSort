@@ -39,7 +39,6 @@ def get_dashboard_data():
         reply_now_count = sum(1 for e in emails if e.get("priority") == "Reply Now")
         read_later_count = sum(1 for e in emails if e.get("priority") == "Read Later")
         ignore_count = sum(1 for e in emails if e.get("priority") == "Ignore")
-        pending_followups = sum(1 for e in emails if e.get("follow_up_required"))
         
         # Get recent 10 emails
         recent_emails = emails[:10]
@@ -55,8 +54,7 @@ def get_dashboard_data():
                 "urgent": urgent_count,
                 "reply_now": reply_now_count,
                 "read_later": read_later_count,
-                "ignore": ignore_count,
-                "pending_followups": pending_followups
+                "ignore": ignore_count
             },
             "recent_emails": recent_emails
         })
@@ -82,11 +80,8 @@ def get_analytics_data():
         priorities = {"Urgent": 0, "Reply Now": 0, "Read Later": 0, "Ignore": 0}
         
         # 2. Category Distribution
-        categories = {
-            "Client": 0, "Manager": 0, "HR": 0, "Finance": 0, "Meeting": 0,
-            "Personal": 0, "Promotion": 0, "Newsletter": 0, "Security": 0,
-            "System Notification": 0, "Other": 0
-        }
+        active_categories = ["Client", "Manager", "HR", "Meeting", "Personal", "Promotion", "Security"]
+        categories = {cat: 0 for cat in active_categories}
         
         # 3. Daily trends (past 7 days)
         today = datetime.now().date()
@@ -103,8 +98,8 @@ def get_analytics_data():
             cat_val = em.get("category")
             if cat_val in categories:
                 categories[cat_val] += 1
-            else:
-                categories["Other"] += 1
+            elif cat_val:
+                categories[cat_val] = categories.get(cat_val, 0) + 1
                 
             # Aggregate daily trends
             created_time = em.get("created_at", 0)

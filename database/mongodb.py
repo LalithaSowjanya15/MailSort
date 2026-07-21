@@ -1,6 +1,5 @@
 """
-mongodb.py
-----------
+
 Database layer for MailSort.
 
 In MOCK_MODE (or when MongoDB is unreachable) an in-memory mock database
@@ -249,7 +248,6 @@ def _seed_mock_data():
                 "Incorporate client feedback",
                 "Submit final slides by 5:00 PM",
             ],
-            "follow_up_required": True,
             "sentiment": "Neutral",
             "reason": (
                 "Explicit deadline set for today (5:00 PM) by your direct manager, "
@@ -288,7 +286,6 @@ def _seed_mock_data():
                 "Verify invoice details against usage dashboard",
                 "Ensure credit card funds are available",
             ],
-            "follow_up_required": False,
             "sentiment": "Neutral",
             "reason": (
                 "Transactional invoice email. Automatic payment scheduled, "
@@ -321,7 +318,6 @@ def _seed_mock_data():
                 "Draft pricing proposal for 250 seats",
                 "Schedule alignment call if needed",
             ],
-            "follow_up_required": True,
             "sentiment": "Positive",
             "reason": (
                 "High business value proposal requested by a positive client. "
@@ -359,7 +355,6 @@ def _seed_mock_data():
             ),
             "deadline": "",
             "action_items": [],
-            "follow_up_required": False,
             "sentiment": "Positive",
             "reason": "Promotional weekly digest with educational content. Safe to read at leisure.",
             "suggested_reply": "",
@@ -389,7 +384,6 @@ def _seed_mock_data():
             ),
             "deadline": "2026-07-30",
             "action_items": ["Complete 45-minute Security Compliance training"],
-            "follow_up_required": True,
             "sentiment": "Neutral",
             "reason": (
                 "Mandatory HR action required with access suspension warning. "
