@@ -1,10 +1,9 @@
 """
-summary_generator.py
---------------------
-Extractive email summarisation using Term Frequency (TF) scoring.
+Hybrid email summarisation engine for MailSort AI.
 
-Selects the most information-dense sentences from the email body
-without any external API or language model — pure Python NLP.
+Attempts Groq LLM API generation first for high-quality synthesized summaries,
+dynamic replies, and classification reasons. Falls back gracefully to 
+pure-Python Term Frequency (TF) sentence scoring if Groq is unavailable.
 """
 
 import math
@@ -14,6 +13,7 @@ import nltk
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.corpus import stopwords
 from utils.helpers import logger
+from services.groq_service import get_groq_insights
 
 # Module-level stopwords set — avoids reloading from disk on every call
 try:
@@ -44,16 +44,10 @@ def _tokenize_and_filter(text):
     return [t for t in tokens if t not in _stop_words and len(t) > 1]
 
 
-def generate_summary(body, max_sentences=2):
+def generate_fallback_summary(body, max_sentences=3):
     """
-    Generates an extractive summary by ranking sentences using TF scoring.
-
-    Algorithm:
-      1. Split the body into sentences.
-      2. Build a word frequency map from all body tokens.
-      3. Score each sentence as the sum of its constituent word frequencies,
-         normalised by log(word_count + 1) to penalise very long sentences.
-      4. Return the top-ranked sentences in their original document order.
+    Generates an extractive rule-based summary by ranking sentences using TF scoring.
+    Used exclusively as a backup if Groq API is unavailable.
 
     Args:
         body (str): Raw email body text.
@@ -106,3 +100,28 @@ def generate_summary(body, max_sentences=2):
     top.sort(key=lambda x: x[0])
 
     return " ".join(s[1] for s in top)
+
+
+def generate_summary(subject, body):
+    """
+    Primary interface for summary & reply generation.
+    Calls Groq LLM first, using TF extractive scoring as a fallback.
+
+    Args:
+        subject (str): Email subject.
+        body (str): Raw email body text.
+
+    Returns:
+        dict: Keys containing 'summary', 'suggested_reply', and 'reason'.
+    """
+    fallback_summary = generate_fallback_summary(body)
+    fallback_reply = "Thank you for the update. I have received your email and will review the details provided."
+    fallback_reason = "General notification requiring review."
+
+    return get_groq_insights(
+        subject=subject,
+        body=body,
+        fallback_summary=fallback_summary,
+        fallback_reply=fallback_reply,
+        fallback_reason=fallback_reason
+    )
