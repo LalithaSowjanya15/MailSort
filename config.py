@@ -12,6 +12,9 @@ class Config:
     ENV = os.environ.get("FLASK_ENV", "development")
     DEBUG = os.environ.get("FLASK_DEBUG", "True").lower() in ("true", "1", "yes")
 
+    # Groq API Key
+    GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
+
     # MongoDB
     MONGO_URI = os.environ.get("MONGO_URI", "mongodb://localhost:27017/mailsort")
 

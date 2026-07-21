@@ -1,6 +1,4 @@
 """
-keyword_engine.py
------------------
 Keyword and phrase libraries used by the NLP rule engine.
 
 Defines three data structures:

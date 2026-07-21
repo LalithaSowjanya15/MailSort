@@ -1,6 +1,4 @@
 """
-email_processor.py
-------------------
 Orchestrates the email ingestion, NLP analysis, and MongoDB storage pipeline.
 
 Flow:
@@ -66,7 +64,6 @@ def process_and_sync_emails(user_email, credentials_dict, max_results=15):
                 "summary":           existing.get("summary",           ""),
                 "deadline":          existing.get("deadline",          ""),
                 "action_items":      existing.get("action_items",      []),
-                "follow_up_required": existing.get("follow_up_required", False),
                 "sentiment":         existing.get("sentiment",         "Neutral"),
                 "reason":            existing.get("reason",            ""),
                 "suggested_reply":   existing.get("suggested_reply",   ""),
@@ -97,7 +94,6 @@ def process_and_sync_emails(user_email, credentials_dict, max_results=15):
             "summary":           analysis.get("summary",           ""),
             "deadline":          analysis.get("deadline",          ""),
             "action_items":      analysis.get("action_items",      []),
-            "follow_up_required": analysis.get("follow_up_required", False),
             "sentiment":         analysis.get("sentiment",         "Neutral"),
             "reason":            analysis.get("reason",            ""),
             "suggested_reply":   analysis.get("suggested_reply",   ""),
