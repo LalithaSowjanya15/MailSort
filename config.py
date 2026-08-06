@@ -16,7 +16,7 @@ class Config:
     GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 
     # MongoDB
-    MONGO_URI = os.environ.get("MONGO_URI", "mongodb://localhost:27017/mailsort")
+    MONGO_URI = os.environ.get("MONGO_URI")
 
     # Google OAuth 2.0
     GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
