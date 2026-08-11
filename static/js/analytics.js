@@ -11,12 +11,12 @@ const ChartTheme = {
     reply: '#3B82F6',
     read: '#F59E0B',
     ignore: '#64748B',
-    
+
     primary: '#4F46E5',
     accent: '#8B5CF6',
     primaryLight: 'rgba(79, 70, 229, 0.1)',
     primaryBorder: 'rgba(79, 70, 229, 0.8)',
-    
+
     gridLines: '#E2E8F0',
     textMain: '#0F172A',
     textMuted: '#64748B'
@@ -26,7 +26,7 @@ async function loadAnalyticsData() {
     try {
         const res = await fetch('/api/analytics');
         const data = await res.json();
-        
+
         if (data.success) {
             renderPriorityChart(data.priority_distribution);
             renderCategoryChart(data.category_distribution);
@@ -41,11 +41,11 @@ async function loadAnalyticsData() {
 function renderPriorityChart(prioData) {
     const ctx = document.getElementById('priorityChart');
     if (!ctx) return;
-    
+
     if (activeCharts.priority) {
         activeCharts.priority.destroy();
     }
-    
+
     // Map labels to custom priority theme colors
     const colors = prioData.labels.map(label => {
         if (label === 'Urgent') return ChartTheme.urgent;
@@ -53,7 +53,7 @@ function renderPriorityChart(prioData) {
         if (label === 'Read Later') return ChartTheme.read;
         return ChartTheme.ignore;
     });
-    
+
     activeCharts.priority = new Chart(ctx, {
         type: 'doughnut',
         data: {
@@ -87,11 +87,11 @@ function renderPriorityChart(prioData) {
 function renderCategoryChart(catData) {
     const ctx = document.getElementById('categoryChart');
     if (!ctx) return;
-    
+
     if (activeCharts.category) {
         activeCharts.category.destroy();
     }
-    
+
     activeCharts.category = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -136,17 +136,17 @@ function renderCategoryChart(catData) {
 function renderTrendsChart(trendData) {
     const ctx = document.getElementById('trendsChart');
     if (!ctx) return;
-    
+
     if (activeCharts.trends) {
         activeCharts.trends.destroy();
     }
-    
+
     // Create gradient fill effect under the curve
     const chartContext = ctx.getContext('2d');
     const gradient = chartContext.createLinearGradient(0, 0, 0, 300);
     gradient.addColorStop(0, 'rgba(79, 70, 229, 0.3)');
     gradient.addColorStop(1, 'rgba(79, 70, 229, 0.0)');
-    
+
     activeCharts.trends = new Chart(ctx, {
         type: 'line',
         data: {
